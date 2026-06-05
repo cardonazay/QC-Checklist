@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QC Checklist App</title>
+  <style>
+    :root {
+      --primary: #d14e40;
+      --light: #f0ecde;
+      --dark: #2b2b2b;
+      --muted: #6f6a62;
+      --white: #ffffff;
+      --border: #ddd3c2;
+      --success: #2d6a4f;
+      --danger: #9b2c2c;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--light);
+      color: var(--dark);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 880px;
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 28px 32px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      opacity: 0.92;
+      font-size: 15px;
+    }
+
+    main { padding: 32px; }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-size: 15px;
+      background: #fffdf8;
+      color: var(--dark);
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(209, 78, 64, 0.15);
+    }
+
+    .panel {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 22px;
+    }
+
+    .panel h2, .panel h3 {
+      margin-top: 0;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 13px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+
+    .btn-secondary {
+      background: var(--light);
+      color: var(--dark);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: var(--white);
+      padding: 10px 14px;
+    }
+
+    .btn-small {
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+
+    .progress-wrap {
+      margin-bottom: 24px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: var(--light);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.2s ease;
+    }
+
+    .step-card {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 34px;
+      text-align: center;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .current-file {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 14px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .step-number {
+      color: var(--primary);
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .step-text {
+      font-size: 28px;
+      line-height: 1.25;
+      font-weight: 800;
+      max-width: 720px;
+      margin: 0;
+    }
+
+    .receipt {
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      margin-top: 20px;
+    }
+
+    .receipt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .receipt-item {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .receipt-item strong {
+      display: block;
+      font-size: 12px;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .status-approved {
+      color: var(--success);
+      font-weight: 900;
+    }
+
+    .files-summary {
+      margin-top: 18px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .files-summary ul {
+      margin: 10px 0 0;
+      padding-left: 22px;
+    }
+
+    .sheet-box {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 16px;
+      background: #fffdf8;
+      border: 1px dashed var(--border);
+    }
+
+    .notice {
+      margin-top: 14px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 700;
+      margin-top: 12px;
+    }
+
+    .success-message {
+      color: var(--success);
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 12px; align-items: flex-start; }
+      header, main { padding: 24px 20px; }
+      .grid, .receipt-grid { grid-template-columns: 1fr; }
+      .file-row { grid-template-columns: 1fr; }
+      .step-text { font-size: 23px; }
+      .step-card { padding: 24px 18px; }
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .app { box-shadow: none; border: none; max-width: none; }
+      header, .btn-row, .sheet-box, #startScreen, #qcScreen { display: none !important; }
+      #completeScreen { display: block !important; }
+      main { padding: 0; }
+      .receipt { border: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>QC Checklist App</h1>
+      <p>Review every file step by step. Complete all files to approve the order.</p>
+    </header>
+
+    <main>
+      <section id="startScreen" class="screen active">
+        <div class="grid">
+          <div>
+            <label for="orderNumber">Order number</label>
+            <input id="orderNumber" type="text" placeholder="Example: 27591" autocomplete="off" />
+          </div>
+
+          <div>
+            <label for="orderType">Order type</label>
+            <select id="orderType">
+              <option value="">Select order type</option>
+              <option value="SP">SP</option>
+              <option value="EMD">EMD</option>
+              <option value="DTF">DTF</option>
+              <option value="COMBO">COMBO</option>
+              <option value="PROMO">PROMO</option>
+              <option value="OTHER">OTHER</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="executionDate">Execution date</label>
+            <input id="executionDate" type="date" />
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Files in this order</h2>
+          <p class="notice">Add every file that belongs to this order. The app will run the full QC checklist for each file before approving the order.</p>
+
+          <div id="filesContainer"></div>
+
+          <div class="btn-row">
+            <button class="btn-secondary" type="button" onclick="addFileInput()">+ Add file</button>
+          </div>
+        </div>
+
+        <div id="startError" class="error"></div>
+
+        <div class="btn-row">
+          <button class="btn-primary" type="button" onclick="startQC()">Start QC</button>
+        </div>
+      </section>
+
+      <section id="qcScreen" class="screen">
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span id="fileProgressText">File 1 of 1</span>
+            <span id="stepProgressText">Step 1 of 21</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="step-card">
+          <div id="currentFileLabel" class="current-file">Current file</div>
+          <div id="stepNumber" class="step-number">Step 1</div>
+          <p id="stepText" class="step-text"></p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" type="button" onclick="goBack()">Back</button>
+          <button class="btn-primary" type="button" onclick="nextStep()">Next Step</button>
+        </div>
+      </section>
+
+      <section id="completeScreen" class="screen">
+        <h2 class="status-approved">Order approved and ready to produce.</h2>
+        <p>The QC process has been completed for every file in this order.</p>
+
+        <div id="receipt" class="receipt"></div>
+
+        <div class="sheet-box">
+          <label for="appsScriptUrl">Google Apps Script Web App URL</label>
+          <input id="appsScriptUrl" type="url" placeholder="Paste your /exec URL here" />
+          <div class="btn-row">
+            <button class="btn-primary" type="button" onclick="saveToGoogleSheets()">Save to Google Sheets</button>
+          </div>
+          <div id="sheetMessage"></div>
+          <p class="notice">This saves one grouped outcome per order, including all reviewed files under the same order number.</p>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-secondary" type="button" onclick="window.print()">Print / Save PDF</button>
+          <button class="btn-secondary" type="button" onclick="downloadReceipt()">Download TXT Receipt</button>
+          <button class="btn-primary" type="button" onclick="resetApp()">Start New QC</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const qcSteps = [
+      "The files are complete.",
+      "The proofs match the imprint information.",
+      "The file sizes match the information shown in the proofs.",
+      "The file sizes match the visual representation shown in the proofs.",
+      "The file colors match the proofs.",
+      "The color separations are correct.",
+      "The halftones are correct, and you have confirmed the LPI.",
+      "All colors are in the correct profile.",
+      "The smallest elements meet the printing requirements.",
+      "The text is the appropriate size for printing and has been converted to outlines.",
+      "The file is not inverted.",
+      "The file is free of artifacts that could make it look dirty or messy.",
+      "If the file contains images, they are properly rasterized or embedded.",
+      "The file is within the correct margins.",
+      "The file is free of unwanted white borders, lines, or dots.",
+      "The file fits the template correctly.",
+      "If the design looks too small in the proof, you have added an additional PDF with the full view.",
+      "The quantities are correct.",
+      "The file is named correctly.",
+      "The files are organized.",
+      "You have resolved all questions about this file through Slack."
+    ];
+
+    let orderData = null;
+    let currentFileIndex = 0;
+    let currentStepIndex = 0;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("executionDate").valueAsDate = new Date();
+      addFileInput();
+    });
+
+    function showScreen(screenId) {
+      document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+      document.getElementById(screenId).classList.add("active");
+    }
+
+    function addFileInput(value = "") {
+      const filesContainer = document.getElementById("filesContainer");
+      const row = document.createElement("div");
+      row.className = "file-row";
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className = "file-input";
+      input.placeholder = "File number or file name";
+      input.value = value;
+      input.autocomplete = "off";
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "btn-danger btn-small";
+      removeButton.textContent = "Remove";
+      removeButton.onclick = () => {
+        row.remove();
+        if (document.querySelectorAll(".file-input").length === 0) {
+          addFileInput();
+        }
+      };
+
+      row.appendChild(input);
+      row.appendChild(removeButton);
+      filesContainer.appendChild(row);
+      input.focus();
+    }
+
+    function getFilesFromInputs() {
+      return Array.from(document.querySelectorAll(".file-input"))
+        .map(input => input.value.trim())
+        .filter(Boolean);
+    }
+
+    function startQC() {
+      const orderNumber = document.getElementById("orderNumber").value.trim();
+      const orderType = document.getElementById("orderType").value;
+      const executionDate = document.getElementById("executionDate").value;
+      const files = getFilesFromInputs();
+      const errorBox = document.getElementById("startError");
+
+      errorBox.textContent = "";
+
+      if (!orderNumber) {
+        errorBox.textContent = "Please enter the order number.";
+        return;
+      }
+
+      if (!orderType) {
+        errorBox.textContent = "Please select the order type.";
+        return;
+      }
+
+      if (!executionDate) {
+        errorBox.textContent = "Please select the execution date.";
+        return;
+      }
+
+      if (files.length === 0) {
+        errorBox.textContent = "Please add at least one file.";
+        return;
+      }
+
+      orderData = {
+        orderNumber,
+        orderType,
+        executionDate,
+        creationDate: new Date().toLocaleString(),
+        qcStatus: "Approved",
+        approvedMessage: "Order approved and ready to produce.",
+        files: files.map(fileName => ({
+          fileName,
+          status: "In progress",
+          completedSteps: []
+        }))
+      };
+
+      currentFileIndex = 0;
+      currentStepIndex = 0;
+      showScreen("qcScreen");
+      renderStep();
+    }
+
+    function renderStep() {
+      const currentFile = orderData.files[currentFileIndex];
+      const totalSteps = qcSteps.length;
+      const totalFiles = orderData.files.length;
+      const completedStepsGlobal = currentFileIndex * totalSteps + currentStepIndex;
+      const totalGlobalSteps = totalFiles * totalSteps;
+      const progressPercent = (completedStepsGlobal / totalGlobalSteps) * 100;
+
+      document.getElementById("fileProgressText").textContent = `File ${currentFileIndex + 1} of ${totalFiles}`;
+      document.getElementById("stepProgressText").textContent = `Step ${currentStepIndex + 1} of ${totalSteps}`;
+      document.getElementById("progressFill").style.width = `${progressPercent}%`;
+      document.getElementById("currentFileLabel").textContent = `Current file: ${currentFile.fileName}`;
+      document.getElementById("stepNumber").textContent = `Step ${currentStepIndex + 1}`;
+      document.getElementById("stepText").textContent = qcSteps[currentStepIndex];
+    }
+
+    function nextStep() {
+      const currentFile = orderData.files[currentFileIndex];
+      const currentStep = qcSteps[currentStepIndex];
+
+      if (!currentFile.completedSteps.includes(currentStep)) {
+        currentFile.completedSteps.push(currentStep);
+      }
+
+      if (currentStepIndex < qcSteps.length - 1) {
+        currentStepIndex++;
+        renderStep();
+        return;
+      }
+
+      currentFile.status = "Approved";
+
+      if (currentFileIndex < orderData.files.length - 1) {
+        currentFileIndex++;
+        currentStepIndex = 0;
+        renderStep();
+        return;
+      }
+
+      document.getElementById("progressFill").style.width = "100%";
+      completeOrder();
+    }
+
+    function goBack() {
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        renderStep();
+        return;
+      }
+
+      if (currentFileIndex > 0) {
+        currentFileIndex--;
+        currentStepIndex = qcSteps.length - 1;
+        renderStep();
+        return;
+      }
+
+      showScreen("startScreen");
+    }
+
+    function completeOrder() {
+      orderData.files.forEach(file => {
+        if (file.status !== "Approved") file.status = "Approved";
+      });
+
+      showScreen("completeScreen");
+      renderReceipt();
+    }
+
+    function getFilesSummary() {
+      return orderData.files
+        .map(file => `${file.fileName} — ${file.status}`)
+        .join("\n");
+    }
+
+    function getPayload() {
+      return {
+        orderNumber: orderData.orderNumber,
+        orderType: orderData.orderType,
+        executionDate: orderData.executionDate,
+        creationDate: orderData.creationDate,
+        qcStatus: orderData.qcStatus,
+        approvedMessage: orderData.approvedMessage,
+        totalFiles: orderData.files.length,
+        approvedFiles: orderData.files.filter(file => file.status === "Approved").length,
+        filesSummary: getFilesSummary(),
+        files: orderData.files
+      };
+    }
+
+    function renderReceipt() {
+      const payload = getPayload();
+      const filesList = orderData.files
+        .map(file => `<li><strong>${escapeHtml(file.fileName)}</strong> — ${escapeHtml(file.status)}</li>`)
+        .join("");
+
+      document.getElementById("receipt").innerHTML = `
+        <h3>QC Receipt</h3>
+        <div class="receipt-grid">
+          <div class="receipt-item"><strong>Order Number</strong>${escapeHtml(payload.orderNumber)}</div>
+          <div class="receipt-item"><strong>Order Type</strong>${escapeHtml(payload.orderType)}</div>
+          <div class="receipt-item"><strong>Execution Date</strong>${escapeHtml(payload.executionDate)}</div>
+          <div class="receipt-item"><strong>Creation Date</strong>${escapeHtml(payload.creationDate)}</div>
+          <div class="receipt-item"><strong>QC Status</strong><span class="status-approved">${escapeHtml(payload.qcStatus)}</span></div>
+          <div class="receipt-item"><strong>Total Files</strong>${payload.totalFiles}</div>
+        </div>
+        <div class="files-summary">
+          <strong>Files reviewed</strong>
+          <ul>${filesList}</ul>
+        </div>
+      `;
+    }
+
+    async function saveToGoogleSheets() {
+      const url = document.getElementById("appsScriptUrl").value.trim();
+      const messageBox = document.getElementById("sheetMessage");
+
+      messageBox.className = "";
+      messageBox.textContent = "";
+
+      if (!url) {
+        messageBox.className = "error";
+        messageBox.textContent = "Please paste your Google Apps Script Web App URL.";
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append("payload", JSON.stringify(getPayload()));
+
+        await fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          body: formData
+        });
+
+        messageBox.className = "success-message";
+        messageBox.textContent = "Sent to Google Sheets. Please verify the new row in your spreadsheet.";
+      } catch (error) {
+        messageBox.className = "error";
+        messageBox.textContent = "Could not send the data. Please check your Apps Script URL and deployment permissions.";
+      }
+    }
+
+    function downloadReceipt() {
+      const payload = getPayload();
+      const detail = orderData.files.map(file => {
+        return [
+          `File: ${file.fileName}`,
+          `Status: ${file.status}`,
+          "Completed steps:",
+          ...file.completedSteps.map((step, index) => `${index + 1}. ${step}`)
+        ].join("\n");
+      }).join("\n\n");
+
+      const text = [
+        "QC Receipt",
+        "====================",
+        `Order Number: ${payload.orderNumber}`,
+        `Order Type: ${payload.orderType}`,
+        `Execution Date: ${payload.executionDate}`,
+        `Creation Date: ${payload.creationDate}`,
+        `QC Status: ${payload.qcStatus}`,
+        `Total Files: ${payload.totalFiles}`,
+        `Approved Files: ${payload.approvedFiles}`,
+        "",
+        "Files Summary:",
+        payload.filesSummary,
+        "",
+        "Full QC Detail:",
+        detail
+      ].join("\n");
+
+      const blob = new Blob([text], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `QC-Receipt-${payload.orderNumber}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function resetApp() {
+      orderData = null;
+      currentFileIndex = 0;
+      currentStepIndex = 0;
+      document.getElementById("orderNumber").value = "";
+      document.getElementById("orderType").value = "";
+      document.getElementById("executionDate").valueAsDate = new Date();
+      document.getElementById("filesContainer").innerHTML = "";
+      document.getElementById("appsScriptUrl").value = "";
+      document.getElementById("sheetMessage").textContent = "";
+      document.getElementById("startError").textContent = "";
+      addFileInput();
+      showScreen("startScreen");
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
